@@ -1,0 +1,24 @@
+[package]
+name = "odoo-mcp"
+version = "0.1.0"
+edition = "2021"
+authors = ["MUST Technology Pte Ltd <oss@must.com.sg>"]
+homepage = "https://must.com.sg"
+description = "Model Context Protocol (MCP) server for Odoo ERP, in Rust. Read-first, single binary, stdio transport."
+license = "LicenseRef-FSL-1.1-MIT"
+repository = "https://github.com/MUST-Technology-Pte-Ltd/odoo-mcp-rust"
+keywords = ["mcp", "odoo", "erp", "ai-agent", "jsonrpc"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+
+[[bin]]
+name = "odoo-mcp"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", features = ["tls", "json"] }
+
+[profile.release]
+strip = true
