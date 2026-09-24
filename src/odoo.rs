@@ -8,8 +8,8 @@
 //!
 //! Credentials come from the environment so they never touch the wire log or a
 //! config file in a repo:
-//!   ODOO_URL       e.g. https://gmf.cloud.must.com.sg
-//!   ODOO_DB        database name, e.g. gmf
+//!   ODOO_URL       e.g. https://your-odoo-instance.example.com
+//!   ODOO_DB        database name, e.g. your-database-name
 //!   ODOO_USERNAME  login
 //!   ODOO_API_KEY   an API key from Settings > Account Security (preferred), or
 //!   ODOO_PASSWORD  a password (fallback)

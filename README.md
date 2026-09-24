@@ -1,7 +1,7 @@
 # odoo-mcp
 
 A **Model Context Protocol (MCP) server for Odoo ERP, written in Rust** — a
-single static binary that lets an AI assistant query (and, when explicitly
+single self-contained binary that lets an AI assistant query (and, when explicitly
 enabled, update) an Odoo database over the MCP stdio transport.
 
 ```jsonc
@@ -11,15 +11,46 @@ enabled, update) an Odoo database over the MCP stdio transport.
     "odoo": {
       "command": "odoo-mcp",
       "env": {
-        "ODOO_URL": "https://erp.example.com",
-        "ODOO_DB": "mycompany",
-        "ODOO_USERNAME": "bot@example.com",
+        "ODOO_URL": "https://your-odoo-instance.example.com",
+        "ODOO_DB": "your-database-name",
+        "ODOO_USERNAME": "api-user@example.com",
         "ODOO_API_KEY": "…"        // from Odoo > Settings > Account Security
       }
     }
   }
 }
 ```
+
+`command` must be on your `PATH` (or an absolute path to the binary). The
+binary takes no command-line flags; everything is configured by environment
+variable and it speaks MCP on stdin/stdout.
+
+## Install
+
+- **Prebuilt binary** — download from
+  [GitHub Releases](https://github.com/MUST-Technology-Pte-Ltd/odoo-mcp-rust/releases):
+  `odoo-mcp-linux-x86_64`, `odoo-mcp-macos-arm64`,
+  `odoo-mcp-windows-x86_64.exe` (unsigned).
+- **From source** (Rust toolchain required):
+
+  ```bash
+  cargo install --git https://github.com/MUST-Technology-Pte-Ltd/odoo-mcp-rust
+  ```
+
+## Configuration
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `ODOO_URL` | yes | Base URL of the Odoo server (the client posts to `<ODOO_URL>/jsonrpc`) |
+| `ODOO_DB` | yes | Database name |
+| `ODOO_USERNAME` | yes | Login of the Odoo user the server acts as |
+| `ODOO_API_KEY` | one of these | API key (preferred) |
+| `ODOO_PASSWORD` | one of these | Password — used only if `ODOO_API_KEY` is unset |
+| `ODOO_ALLOW_WRITE` | no | Set to exactly `1` to enable `odoo_create` / `odoo_write` |
+| `ODOO_WRITE_MODELS` | no | Comma-separated model allowlist for writes (unset = any model) |
+
+Missing connection variables do not stop the server: `initialize` and
+`tools/list` still work, and tool calls return an error naming what to set.
 
 ## Why Rust
 
@@ -31,14 +62,15 @@ tree, small audit surface.
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `odoo_fields_get` | Discover a model's fields, types and labels — start here |
-| `odoo_search_read` | Search + read in one call (Odoo domain syntax) |
-| `odoo_read` | Read specific record ids |
-| `odoo_search_count` | Count matching records |
-| `odoo_name_search` | Resolve a customer/product the user named to `[id, name]` |
-| `odoo_create` / `odoo_write` | **Off by default** — see below |
+| Tool | Arguments (required in **bold**) | Purpose |
+|---|---|---|
+| `odoo_fields_get` | **`model`** | Discover a model's fields, types and labels — start here |
+| `odoo_search_read` | **`model`**, `domain` (default `[]`), `fields`, `limit` (default 50), `order` | Search + read in one call (Odoo domain syntax) |
+| `odoo_read` | **`model`**, **`ids`**, `fields` | Read specific record ids |
+| `odoo_search_count` | **`model`**, `domain` (default `[]`) | Count matching records |
+| `odoo_name_search` | **`model`**, **`name`**, `limit` (default 10) | Resolve a customer/product the user named to `[id, name]` |
+| `odoo_create` | **`model`**, **`values`** | **Off by default** — see below |
+| `odoo_write` | **`model`**, **`ids`**, **`values`** | **Off by default** — see below |
 
 ## Read-first, and it cannot exceed its user
 
@@ -58,8 +90,8 @@ Prefer an **API key** (`ODOO_API_KEY`, revocable per user) over a password.
 ## Build
 
 ```bash
-cargo build --release      # target/release/odoo-mcp
-cargo test                 # protocol handshake + write-gate tests
+cargo build --release      # target/release/odoo-mcp (odoo-mcp.exe on Windows)
+cargo test                 # protocol handshake + write-gate tests (no Odoo needed)
 ```
 
 ## Design
@@ -88,9 +120,11 @@ read-first implementation.
 
 ## License
 
-[Functional Source License 1.1 (MIT future grant)](LICENSE.md) — use it freely
+[Functional Source License 1.1, MIT Future License (FSL-1.1-MIT)](LICENSE.md)
+— use it freely
 for anything that is not a competing Odoo-MCP product; each release converts to
 MIT two years after publication. See `NOTICE.md` for provenance and trademarks.
+Open-source contact: `oss@must.com.sg`; security reports: see `SECURITY.md`.
 
 Independent open-source software. Odoo is a trademark of Odoo S.A.; this
 project is not affiliated with or endorsed by Odoo S.A.
