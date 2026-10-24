@@ -48,6 +48,7 @@ variable and it speaks MCP on stdin/stdout.
 | `ODOO_PASSWORD` | one of these | Password — used only if `ODOO_API_KEY` is unset |
 | `ODOO_ALLOW_WRITE` | no | Set to exactly `1` to enable `odoo_create` / `odoo_write` |
 | `ODOO_WRITE_MODELS` | no | Comma-separated model allowlist for writes (unset = any model) |
+| `ODOO_ALLOW_METHODS` | no | Comma-separated `model:method` pairs `odoo_call` may run, e.g. `sale.order:action_confirm`. Unset = `odoo_call` is not advertised. Methods starting with `_` are always refused |
 
 Missing connection variables do not stop the server: `initialize` and
 `tools/list` still work, and tool calls return an error naming what to set.
