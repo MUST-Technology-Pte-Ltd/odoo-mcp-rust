@@ -61,3 +61,29 @@ fn write_tools_appear_only_when_enabled() {
     assert!(names.contains(&"odoo_create".to_string()));
     assert!(names.contains(&"odoo_write".to_string()));
 }
+
+#[test]
+fn odoo_call_appears_only_with_an_allowlist_and_names_it() {
+    let list = |allow: Option<&str>| -> serde_json::Value {
+        let bin = env!("CARGO_BIN_EXE_odoo-mcp");
+        let mut cmd = Command::new(bin);
+        cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).env_remove("ODOO_ALLOW_METHODS");
+        if let Some(a) = allow {
+            cmd.env("ODOO_ALLOW_METHODS", a);
+        }
+        let mut child = cmd.spawn().unwrap();
+        let mut stdin = child.stdin.take().unwrap();
+        writeln!(stdin, r#"{{"jsonrpc":"2.0","id":1,"method":"tools/list"}}"#).unwrap();
+        drop(stdin);
+        let out = child.wait_with_output().unwrap();
+        let text = String::from_utf8_lossy(&out.stdout).to_string();
+        let line = text.lines().find(|l| !l.trim().is_empty()).unwrap().to_string();
+        serde_json::from_str(&line).unwrap()
+    };
+    let find = |v: &serde_json::Value| v["result"]["tools"].as_array().unwrap().iter()
+        .find(|t| t["name"] == "odoo_call").cloned();
+
+    assert!(find(&list(None)).is_none(), "odoo_call must be hidden without ODOO_ALLOW_METHODS");
+    let tool = find(&list(Some("sale.order:action_confirm"))).expect("odoo_call advertised");
+    assert!(tool["description"].as_str().unwrap().contains("sale.order:action_confirm"));
+}
